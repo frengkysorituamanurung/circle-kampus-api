@@ -1,0 +1,6 @@
+# File: .gitignore
+
+# Environment variables
+.env
+.env.*
+!/.env.example
