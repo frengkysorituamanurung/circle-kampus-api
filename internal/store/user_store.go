@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool" // Menggunakan pgxpool untuk connection pool
-	"github.com/username/go-community-api/internal/model" // Ganti dengan path modul Anda
+	"github.com/frengkysorituamanurung/circle-kampus-api/internal/model" // Ganti dengan path modul Anda
 )
 
 type UserStore struct {

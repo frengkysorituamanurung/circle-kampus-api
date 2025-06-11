@@ -5,9 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/username/go-community-api/internal/auth" // Ganti dengan path modul Anda
-	"github.com/username/go-community-api/internal/model"
-	"github.com/username/go-community-api/internal/store"
+	"github.com/frengkysorituamanurung/circle-kampus-api/internal/auth" // Ganti dengan path modul Anda
+	"github.com/frengkysorituamanurung/circle-kampus-api/internal/model"
+	"github.com/frengkysorituamanurung/circle-kampus-api/internal/store"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type UserHandler struct {
@@ -56,7 +57,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 	if err != nil {
 		// Cek error duplikat (sangat umum)
 		// Kode error '23505' adalah unique_violation di PostgreSQL
-		if pgErr, ok := err.(pgconn.PgError); ok && pgErr.Code == "23505" {
+		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == "23505" {
 			c.JSON(http.StatusConflict, gin.H{"error": "Username or email already exists"})
 			return
 		}
