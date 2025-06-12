@@ -14,8 +14,18 @@ type UserStore struct {
 	db *pgxpool.Pool
 }
 
-func (s *UserStore) Create(context context.Context, newUser *model.User) (any, error) {
-	panic("unimplemented")
+func (s *UserStore) Create(ctx context.Context, user *model.User) (string, error) {
+    query := `INSERT INTO users (username, email, password_hash)
+               VALUES ($1, $2, $3)
+               RETURNING id`
+
+    var userID string
+    err := s.db.QueryRow(ctx, query, user.Username, user.Email, user.PasswordHash).Scan(&userID)
+    if err != nil {
+        return "", err
+    }
+
+    return userID, nil
 }
 
 var ErrUserNotFound = errors.New("user not found")
@@ -34,6 +44,29 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*model.User, 
 		&user.Username,
 		&user.Email,
 		&user.PasswordHash,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (s *UserStore) GetByID(ctx context.Context, id string) (*model.User, error) {
+	query := `SELECT id, username, email, created_at, updated_at
+			   FROM users WHERE id = $1`
+
+	var user model.User
+	err := s.db.QueryRow(ctx, query, id).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)

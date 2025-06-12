@@ -60,7 +60,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 	}
 
 	response := model.UserResponse{
-		ID:       userID.(string),
+		ID:       userID,
 		Username: newUser.Username,
 		Email:    newUser.Email,
 	}
@@ -102,4 +102,34 @@ func (h *UserHandler) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, model.LoginResponse{AccessToken: token})
+}
+
+func (h *UserHandler) GetProfile(c *gin.Context) {
+	// Ambil userID dari context yang sudah di-set oleh middleware
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user ID from context"})
+		return
+	}
+
+	// Panggil store untuk mendapatkan detail user dari DB
+	user, err := h.userStore.GetByID(c.Request.Context(), userID.(string))
+	if err != nil {
+		if errors.Is(err, store.ErrUserNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve user profile"})
+		return
+	}
+
+	// Kembalikan response profil
+	response := model.UserResponse{
+		ID:        user.ID,
+		Username:  user.Username,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+	}
+
+	c.JSON(http.StatusOK, response)
 }

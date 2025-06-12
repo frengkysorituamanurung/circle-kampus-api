@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 
+	"github.com/frengkysorituamanurung/circle-kampus-api/configs"
 	"github.com/frengkysorituamanurung/circle-kampus-api/internal/handler"
 	"github.com/frengkysorituamanurung/circle-kampus-api/internal/store"
 )
@@ -36,15 +37,14 @@ func main() {
 	fmt.Println("🎉 Berhasil terhubung ke database PostgreSQL!")
 
 
-	// Inisialisasi komponen
 	
 	userStore := store.NewUserStore(dbpool)
 	userHandler := handler.NewUserHandler(userStore)
 
-	// Inisialisasi Gin Router
 	router := gin.Default()
 
-	// Grouping routes by version
+	configs.SetupCORS(router)
+
 	v1 := router.Group("/v1")
 	{
 		authRoutes := v1.Group("/auth")
@@ -52,12 +52,11 @@ func main() {
 			authRoutes.POST("/register", userHandler.Register)
 			authRoutes.POST("/login", userHandler.Login)
 		}
+		protectedRoutes := v1.Group("/", handler.AuthMiddleware())
+		{
+			protectedRoutes.GET("/users/me", userHandler.GetProfile)
+		}
 	}
-	
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "pong"})
-	})
-
 	
 
 	fmt.Println("🚀 Server berjalan di http://localhost:8080")
